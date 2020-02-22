@@ -1,5 +1,6 @@
 package Model;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class Event {
@@ -12,6 +13,28 @@ public class Event {
     private String City;
     private String EventType;
     private int Year;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Event event = (Event) o;
+        return Double.compare(event.Latitude, Latitude) == 0 &&
+                Double.compare(event.Longitude, Longitude) == 0 &&
+                Year == event.Year &&
+                EventID.equals(event.EventID) &&
+                AssociatedUsername.equals(event.AssociatedUsername) &&
+                PersonID.equals(event.PersonID) &&
+                Country.equals(event.Country) &&
+                City.equals(event.City) &&
+                EventType.equals(event.EventType);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(EventID, AssociatedUsername, PersonID, Latitude, Longitude, Country, City, EventType, Year);
+    }
+
 
     /**
      *

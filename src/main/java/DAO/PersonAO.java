@@ -1,5 +1,6 @@
 package DAO;
 
+import DataAccess.DataAccessException;
 import Model.Person;
 
 import java.sql.Connection;
@@ -58,11 +59,12 @@ public class PersonAO {
     public void deletePerson(Connection connection, String personID) throws SQLException {
         PreparedStatement stmt = null;
         try {
-            String sql = "delete from persons";
+            String sql = "DELETE from persons WHERE Person_ID = '" + personID +"';";
             stmt = connection.prepareStatement(sql);
-            if (stmt.executeUpdate() == 1) {
+            try{
+            stmt.executeUpdate();
                 System.out.printf("Deleted %s.\n", personID);
-            } else  {
+            } catch (SQLException e) {
                 System.out.printf("Failed to delete %s.\n", personID);
             }
         } finally {
@@ -93,9 +95,10 @@ public class PersonAO {
             stmt.setString(7, person.getMotherID());
             stmt.setString(8, person.getSpouseID());
 
-            if(stmt.executeUpdate() == 1) {
-                System.out.println("Updated Person: " +person.getFirstName());
-            } else {
+            try {
+                stmt.executeUpdate();
+                System.out.println("Updated Person: " + person.getFirstName());
+            } catch (SQLException e){
                 System.out.println("Failed to update Person: " + person.getPersonID());
             }
 
@@ -118,9 +121,8 @@ public class PersonAO {
         ResultSet rs = null;
 
         try {
-            String sql = "select Person_ID, Username, First_Name, Last_Name, Gender from Person";
+            String sql = "SELECT Person_ID, Username, First_Name, Last_Name, Gender, Father_ID, Mother_ID, Spouse_ID FROM persons";
             stmt = connection.prepareStatement(sql);
-
             rs = stmt.executeQuery();
             while(rs.next()) {
 
@@ -129,14 +131,16 @@ public class PersonAO {
                 String fName = rs.getString(3);
                 String lName = rs.getString(4);
                 String gender = rs.getString(5);
+                String dad = rs.getString(6);
+                String mom = rs.getString(7);
+                String spouse = rs.getString(8);
 
-                people.add(new Person(userName, fName, lName, gender));
+                people.add(new Person(personId, userName, fName, lName, gender, dad, mom, spouse));
             }
         } finally {
             if(rs != null) {
                 rs.close();
             }
-
             if(stmt != null) {
                 stmt.close();
             }
@@ -145,28 +149,45 @@ public class PersonAO {
         return people;
     }
 
-    /**
-     * @param connection
-     * @throws SQLException
-     */
-    public void clearPersons(Connection connection) throws SQLException {
+    public Person getPerson(Connection connection, String personID) throws DataAccessException {
+        Person person = null;
         PreparedStatement stmt = null;
+        ResultSet rs = null;
+
         try {
-            String sql = "delete from persons";
+            String sql = "SELECT Person_ID, Username, First_Name, Last_Name, Gender, Father_ID, Mother_ID, Spouse_ID " +
+                    "FROM persons " +
+                    "WHERE Person_ID = '" + personID + "';";
             stmt = connection.prepareStatement(sql);
 
-            int count = stmt.executeUpdate();
+            rs = stmt.executeQuery();
+            String personId = rs.getString(1);
+            String userName = rs.getString(2);
+            String fName = rs.getString(3);
+            String lName = rs.getString(4);
+            String gender = rs.getString(5);
+            String dad = rs.getString(6);
+            String mom = rs.getString(7);
+            String spouse = rs.getString(8);
 
-            sql = "delete from sqlite_sequence where name = 'persons'";
-            stmt = connection.prepareStatement(sql);
-            stmt.executeUpdate();
 
-            System.out.printf("Deleted %d persons\n", count);
-
+            person = new Person(personId, userName, fName, lName, gender, dad, mom, spouse);
+        } catch(SQLException e ){
+            throw new DataAccessException("Error finding Person");
         } finally {
-            if(stmt != null) {
-                stmt.close();
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException e) {
+                throw new DataAccessException("Error closing Result Set or PreparedStatement");
             }
         }
+
+        return person;
     }
 }

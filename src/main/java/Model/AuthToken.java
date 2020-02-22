@@ -1,19 +1,51 @@
 package Model;
 
+import java.util.Objects;
 import java.util.Random;
+import java.util.UUID;
 
 public class AuthToken {
-    private int tokenID;
+    private String tokenID;
     private String userName;
     private String token;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AuthToken authToken = (AuthToken) o;
+        return tokenID.equals(authToken.tokenID) &&
+                userName.equals(authToken.userName) &&
+                token.equals(authToken.token);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(tokenID, userName, token);
+    }
+
+
+
     /**
-     * Builds a new token.
+     *
      * @param userName
      */
     public AuthToken(String userName) {
+        this.tokenID = UUID.randomUUID().toString();
         this.token = randomString();
         this.userName = userName;
+    }
+
+    /**
+     *
+     * @param tokenID
+     * @param name
+     * @param token
+     */
+    public AuthToken(String tokenID, String name, String token) {
+        this.tokenID = tokenID;
+        this.userName = name;
+        this.token = token;
     }
 
     /**
@@ -32,6 +64,7 @@ public class AuthToken {
         return this.token;
     }
 
+    public String getTokenID() {return this.tokenID;}
     /**
      *
      * @return a random string
